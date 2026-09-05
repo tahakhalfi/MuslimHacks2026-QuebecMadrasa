@@ -12,7 +12,7 @@ export default function HomePage() {
     <main className="real-landing">
       <header className="real-nav-wrap">
         <nav className="real-nav" aria-label="Navigation principale">
-          <Link href="/" className="real-brand"><span className="real-brand-mark">م</span><span>Madrasa Québec</span></Link>
+          <Link href="/" className="real-brand"><img className="site-logo-image" src="/ui/logo-madrasa-quebec.png" alt="Madrasa Québec Network" /></Link>
           <div className="real-nav-links">
             <a href="#familles">Pour les familles</a>
             <a href="#fonctionnement">Comment ça marche</a>
@@ -43,7 +43,7 @@ export default function HomePage() {
 
       <section className="real-pricing" id="tarifs"><p className="real-eyebrow">Commencer simplement</p><h2>Un premier mois pour découvrir votre rythme.</h2><p>Le prototype local est gratuit. Les plans réels seront décidés après validation des besoins des familles.</p><Link href="/parent" className="real-button real-button-dark">Créer mon parcours</Link></section>
 
-      <footer className="real-footer"><div><Link href="/" className="real-brand"><span className="real-brand-mark">م</span><span>Madrasa Québec</span></Link><p>Apprendre en famille. Grandir en communauté.</p></div><div className="real-footer-links"><div><strong>Produit</strong><a href="#fonctionnement">Fonctionnalités</a><Link href="/parent">Espace parent</Link><Link href="/student">Espace élève</Link></div><div><strong>Confiance</strong><a href="#securite">Sécurité</a><a href="#familles">Pour les familles</a><a href="#tarifs">Tarifs</a></div><div><strong>Projet</strong><a href="#pods">Communauté</a><a href="#fonctionnement">Comment ça marche</a></div></div><div className="real-footer-bottom"><span>© 2026 Madrasa Québec</span><span>Conçu pour les familles. Vérifié par les humains.</span></div></footer>
+      <footer className="real-footer"><div><Link href="/" className="real-brand"><img className="site-logo-image" src="/ui/logo-madrasa-quebec.png" alt="Madrasa Québec Network" /></Link><p>Apprendre en famille. Grandir en communauté.</p></div><div className="real-footer-links"><div><strong>Produit</strong><a href="#fonctionnement">Fonctionnalités</a><Link href="/parent">Espace parent</Link><Link href="/student">Espace élève</Link></div><div><strong>Confiance</strong><a href="#securite">Sécurité</a><a href="#familles">Pour les familles</a><a href="#tarifs">Tarifs</a></div><div><strong>Projet</strong><a href="#pods">Communauté</a><a href="#fonctionnement">Comment ça marche</a></div></div><div className="real-footer-bottom"><span>© 2026 Madrasa Québec</span><span>Conçu pour les familles. Vérifié par les humains.</span></div></footer>
     </main>
   );
 }
