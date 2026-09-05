@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Choisir une seule mission. Ne pas modifier les fichiers interdits dans le brief choisi. La mission la plus petite disponible est `03-parent-dashboard-bilingualisation.md`.
+Choisir une seule mission. Ne pas modifier les fichiers interdits dans le brief choisi. La mission prioritaire actuellement disponible est `04-parcours-quebec-end-to-end.md`. Elle remplace l'ancien brief de simple traduction parent pour éviter de diviser le travail sur un trop petit périmètre.
 
 ## Mission A — Parcours Québec et documents
 
