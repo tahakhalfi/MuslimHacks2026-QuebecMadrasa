@@ -80,9 +80,18 @@
 .real-language-switch { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 99px; background: white; }
 .real-language-switch button { border: 0; border-radius: 99px; padding: 6px 10px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 800; }
 .real-language-switch button.active { color: white; background: var(--forest); }
+.real-nav-lang-desktop { display: inline-flex; }
+.real-nav-toggle { display: none; width: 42px; height: 42px; align-items: center; justify-content: center; border: 1.5px solid var(--forest); border-radius: 10px; color: var(--forest); background: transparent; font-size: 18px; line-height: 1; }
+.real-nav-mobile-panel { display: none; }
 
 @media (max-width: 900px) {
   .real-nav-links { display: none; }
+  .real-nav-lang-desktop { display: none; }
+  .real-nav-toggle { display: inline-flex; }
+  .real-nav-mobile-panel { display: grid; gap: 4px; max-width: 1600px; margin: 8px 1.3vw 0; padding: 14px 20px 20px; border-radius: 20px; background: rgba(255,255,255,.97); box-shadow: 0 10px 30px rgba(23,74,59,.09); }
+  .real-nav-mobile-panel a { padding: 12px 4px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 15px; font-weight: 700; }
+  .real-nav-mobile-lang { margin: 10px 0 4px; }
+  .real-nav-mobile-actions { display: grid; gap: 10px; margin-top: 8px; }
   .real-hero { grid-template-columns: 1fr; padding-top: 65px; }
   .real-hero-art { order: -1; min-height: 0; }
   .real-feature-grid { grid-template-columns: repeat(2, 1fr); }
@@ -97,6 +106,8 @@
   .site-logo-image { width: 168px; }
   .real-nav-actions .real-button-outline { display: none; }
   .real-nav-actions .real-button-dark { min-height: 39px; padding: 0 10px; font-size: 11px; }
+  .real-nav-toggle { width: 39px; height: 39px; font-size: 16px; }
+  .real-nav-mobile-actions .real-button { width: 100%; }
   .real-hero { padding: 28px 22px 35px; }
   .real-hero-art { margin: -5px -15px 0; }
   .real-hero h1 { font-size: 46px; }
@@ -109,7 +120,6 @@
   .real-footer { display: block; padding: 46px 25px 22px; }
   .real-footer-links { margin-top: 35px; }
   .real-footer-bottom { margin-top: 36px; gap: 12px; flex-direction: column; }
-  .real-language-switch { align-self: flex-start; }
 }
 
 * { box-sizing: border-box; }
