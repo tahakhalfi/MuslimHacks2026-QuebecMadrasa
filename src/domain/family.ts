@@ -5,6 +5,7 @@ export type Jurisdiction = "quebec";
 export interface Family {
   id: string;
   name: string;
+  parentName: string;
   locale: Locale;
   jurisdiction: Jurisdiction;
   schoolYear: string;
@@ -30,6 +31,7 @@ const schoolYearPattern = /^\d{4}-\d{4}$/;
 export function createFamily(input: {
   id: string;
   name: string;
+  parentName: string;
   locale: Locale;
   jurisdiction: Jurisdiction;
   schoolYear: string;
@@ -38,6 +40,7 @@ export function createFamily(input: {
   now?: string;
 }): Family {
   if (!input.name.trim()) throw new Error("Family name is required");
+  if (!input.parentName.trim()) throw new Error("Parent name is required");
   if (!schoolYearPattern.test(input.schoolYear)) {
     throw new Error("School year must look like 2026-2027");
   }
@@ -51,6 +54,7 @@ export function createFamily(input: {
   return {
     id: input.id,
     name: input.name.trim(),
+    parentName: input.parentName.trim(),
     locale: input.locale,
     jurisdiction: input.jurisdiction,
     schoolYear: input.schoolYear,

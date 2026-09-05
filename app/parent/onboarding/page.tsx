@@ -9,6 +9,7 @@ type Locale = "fr" | "en";
 type ChildDraft = { displayName: string; ageBand: AgeBand; level: string };
 
 const localeStorageKey = "madrasa-locale";
+const familyStorageKey = "madrasa-family";
 const ageBands: AgeBand[] = ["5-8", "9-12", "13-15", "16-17"];
 
 const copy = {
@@ -16,6 +17,7 @@ const copy = {
     title: "Créer votre famille",
     lead: "Trois étapes rapides pour préparer votre espace. Rien n’est partagé publiquement.",
     steps: ["Famille", "Enfants", "Consentement"],
+    parentName: "Votre prénom", parentNamePlaceholder: "Ex. Amine",
     familyName: "Nom de la famille", familyNamePlaceholder: "Ex. Famille Ghorbel",
     jurisdiction: "Juridiction", jurisdictionQuebec: "Québec", jurisdictionOther: "Autre (bientôt disponible)",
     schoolYear: "Année scolaire",
@@ -29,6 +31,7 @@ const copy = {
       ["quebecLimit", "Je comprends que le module Parcours Québec est un assistant de préparation : il ne certifie pas la conformité et ne remplace pas un avis officiel."],
     ] as [string, string][],
     create: "Créer ma famille", creating: "Création en cours…",
+    errorParentName: "Votre prénom est requis.",
     errorName: "Le nom de la famille est requis.",
     errorSchoolYear: "Utilisez le format 2026-2027.",
     errorChildren: "Ajoutez au moins un enfant avec un prénom.",
@@ -43,6 +46,7 @@ const copy = {
     title: "Create your family",
     lead: "Three quick steps to set up your space. Nothing is shared publicly.",
     steps: ["Family", "Children", "Consent"],
+    parentName: "Your first name", parentNamePlaceholder: "E.g. Amine",
     familyName: "Family name", familyNamePlaceholder: "E.g. The Ghorbel family",
     jurisdiction: "Jurisdiction", jurisdictionQuebec: "Quebec", jurisdictionOther: "Other (coming soon)",
     schoolYear: "School year",
@@ -56,6 +60,7 @@ const copy = {
       ["quebecLimit", "I understand the Quebec pathway module is a preparation assistant: it does not certify compliance or replace official advice."],
     ] as [string, string][],
     create: "Create my family", creating: "Creating…",
+    errorParentName: "Your first name is required.",
     errorName: "Family name is required.",
     errorSchoolYear: "Use the format 2026-2027.",
     errorChildren: "Add at least one child with a first name.",
@@ -83,6 +88,7 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [parentName, setParentName] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [schoolYear, setSchoolYear] = useState("2026-2027");
   const [children, setChildren] = useState<ChildDraft[]>([{ displayName: "", ageBand: "5-8", level: "" }]);
@@ -107,6 +113,7 @@ export default function OnboardingPage() {
   function goNext() {
     setError("");
     if (step === 0) {
+      if (!parentName.trim()) return setError(t.errorParentName);
       if (!familyName.trim()) return setError(t.errorName);
       if (!/^\d{4}-\d{4}$/.test(schoolYear)) return setError(t.errorSchoolYear);
     }
@@ -134,6 +141,7 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: familyName,
+          parentName,
           locale,
           schoolYear,
           consents,
@@ -141,6 +149,8 @@ export default function OnboardingPage() {
         }),
       });
       if (!response.ok) throw new Error("failed");
+      const data = await response.json();
+      window.localStorage.setItem(familyStorageKey, JSON.stringify({ family: data.family, children: data.children }));
       setDone(true);
     } catch {
       setError(t.errorServer);
@@ -173,6 +183,7 @@ export default function OnboardingPage() {
       </ol>
 
       {step === 0 && <div className="onboarding-fields">
+        <label>{t.parentName}<input value={parentName} onChange={(e) => setParentName(e.target.value)} placeholder={t.parentNamePlaceholder} /></label>
         <label>{t.familyName}<input value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t.familyNamePlaceholder} /></label>
         <label>{t.jurisdiction}<select value="quebec" onChange={() => {}}><option value="quebec">{t.jurisdictionQuebec}</option><option value="other" disabled>{t.jurisdictionOther}</option></select></label>
         <label>{t.schoolYear}<input value={schoolYear} onChange={(e) => setSchoolYear(e.target.value)} placeholder="2026-2027" /></label>

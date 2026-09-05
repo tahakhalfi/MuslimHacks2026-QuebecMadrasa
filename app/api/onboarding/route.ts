@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const family = createFamily({
       id: crypto.randomUUID(),
       name: body.name ?? "",
+      parentName: body.parentName ?? "",
       locale: body.locale === "en" ? "en" : "fr",
       jurisdiction: "quebec",
       schoolYear: body.schoolYear ?? "",

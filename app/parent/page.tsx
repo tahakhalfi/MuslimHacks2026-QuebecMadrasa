@@ -11,11 +11,12 @@ import {
 } from "@/src/domain/parent-dashboard";
 
 type Locale = "fr" | "en";
-type ChildId = "adam" | "sara";
 type CssVars = React.CSSProperties & { "--pct"?: string };
+type StoredChild = { id: string; displayName: string; ageBand: string; level: string };
+type StoredFamily = { name: string; parentName: string; children: StoredChild[] };
 
 const localeStorageKey = "madrasa-locale";
-const childIds: ChildId[] = ["adam", "sara"];
+const familyStorageKey = "madrasa-family";
 const subjectKeys = ["french", "math", "social", "science"] as const;
 
 const sidebarLinks = [
@@ -29,38 +30,77 @@ const sidebarLinks = [
   ["$", "budget", "#"],
 ] as const;
 
-const subjectsByChild: Record<ChildId, { key: (typeof subjectKeys)[number]; done: boolean }[]> = {
-  adam: [
+const demoSubjectPatterns: { key: (typeof subjectKeys)[number]; done: boolean }[][] = [
+  [
     { key: "french", done: true },
     { key: "math", done: true },
     { key: "social", done: false },
     { key: "science", done: true },
   ],
-  sara: [
+  [
     { key: "french", done: true },
     { key: "math", done: true },
     { key: "social", done: false },
     { key: "science", done: false },
   ],
-};
-
-const initialTasks: ParentTask[] = [
-  { id: "fractions-review", childId: "adam", status: "pending", dueAt: "2026-09-12" },
-  { id: "portfolio-evidence", childId: "sara", status: "pending" },
-  { id: "pod-booking", childId: null, status: "pending" },
 ];
 
-const activityItems: { id: string; childId: ChildId | null; icon: string }[] = [
-  { id: "adam-opinion", childId: "adam", icon: "▤" },
-  { id: "sara-solids", childId: "sara", icon: "✓" },
-  { id: "pod-confirmed", childId: null, icon: "◌" },
-  { id: "adam-portfolio", childId: "adam", icon: "▤" },
-];
+function subjectsForIndex(index: number) {
+  return demoSubjectPatterns[index % demoSubjectPatterns.length];
+}
 
-const upcomingItems: { id: string; childId: ChildId | null }[] = [
-  { id: "pod-thursday", childId: null },
-  { id: "fractions-due", childId: "adam" },
-];
+function fallbackFamily(locale: Locale): StoredFamily {
+  return {
+    name: "Famille Ghorbel",
+    parentName: "Amine",
+    children: [
+      { id: "adam", displayName: "Adam", ageBand: "9-12", level: locale === "fr" ? "5e année" : "Grade 5" },
+      { id: "sara", displayName: "Sara", ageBand: "13-15", level: locale === "fr" ? "3e secondaire" : "Grade 9" },
+    ],
+  };
+}
+
+function familyInitials(parentName: string, familyName: string): string {
+  const familyWord = familyName
+    .trim()
+    .split(/\s+/)
+    .filter((word) => !["famille", "family", "the"].includes(word.toLowerCase()))
+    .pop();
+  const initials = `${parentName.trim()[0] ?? ""}${(familyWord ?? familyName)[0] ?? ""}`.toUpperCase();
+  return initials || "AG";
+}
+
+function frDe(name: string): string {
+  return /^[aeiouyhAEIOUYH]/.test(name) ? `d’${name}` : `de ${name}`;
+}
+
+function buildInitialTasks(family: StoredFamily): ParentTask[] {
+  const reviewId = family.children[0].id;
+  const portfolioId = family.children[1]?.id ?? reviewId;
+  return [
+    { id: "fractions-review", childId: reviewId, status: "pending", dueAt: "2026-09-12" },
+    { id: "portfolio-evidence", childId: portfolioId, status: "pending" },
+    { id: "pod-booking", childId: null, status: "pending" },
+  ];
+}
+
+function buildActivityItems(family: StoredFamily): { id: string; childId: string | null; icon: string }[] {
+  const reviewId = family.children[0].id;
+  const portfolioId = family.children[1]?.id ?? reviewId;
+  return [
+    { id: "child1-opinion", childId: reviewId, icon: "▤" },
+    { id: "child2-solids", childId: portfolioId, icon: "✓" },
+    { id: "pod-confirmed", childId: null, icon: "◌" },
+    { id: "child1-portfolio", childId: reviewId, icon: "▤" },
+  ];
+}
+
+function buildUpcomingItems(family: StoredFamily): { id: string; childId: string | null }[] {
+  return [
+    { id: "pod-thursday", childId: null },
+    { id: "fractions-due", childId: family.children[0].id },
+  ];
+}
 
 const copy = {
   fr: {
@@ -68,41 +108,40 @@ const copy = {
     sidebarLinks: { home: "Accueil", weekPlan: "Plan de la semaine", courses: "Cours", assistant: "Assistant IA", community: "Communauté", portfolio: "Portfolio", quebecPath: "Parcours Québec", budget: "Budget" },
     sidebarBottom: "Votre espace reste privé. Les contenus générés par l’IA nécessitent votre validation.",
     eyebrow: "Espace parent · semaine du 7 septembre",
-    hello: "Bonjour, Amine",
+    helloPrefix: "Bonjour,",
     heroLabel: "Votre prochain geste",
     heroTitle: "Préparer le projet d’apprentissage.",
     heroText: "Il reste des éléments à vérifier avant de générer votre brouillon pour le parcours Québec.",
     heroCta: "Continuer",
     metricProgress: "Progression familiale", metricTasks: "Tâches à valider", metricNext: "Prochaine échéance",
-    metricProgressFoot: "Moyenne des deux enfants", metricTasksFoot: "contenu(s) ou action(s) en attente", metricNextFoot: "Leçon de fractions à valider",
+    metricProgressFoot: "Moyenne des enfants", metricTasksFoot: "contenu(s) ou action(s) en attente", metricNextFoot: "Leçon de fractions à valider",
     filterLabel: "Afficher", filterAll: "Toute la famille",
-    childNames: { adam: "Adam", sara: "Sara" } as Record<ChildId, string>,
-    childMeta: { adam: "10 ans · 5e année", sara: "14 ans · 3e secondaire" } as Record<ChildId, string>,
+    ageBandLabels: { "5-8": "5 à 8 ans", "9-12": "9 à 12 ans", "13-15": "13 à 15 ans", "16-17": "16 à 17 ans" } as Record<string, string>,
     subjectNames: { french: "Français", math: "Mathématiques", social: "Univers social", science: "Sciences" } as Record<string, string>,
     progressTitle: "Progression de la semaine", complete: "Complété",
     activityTitle: "Activité récente",
     activityText: {
-      "adam-opinion": ["Adam a soumis son texte d’opinion.", "Français · 5e année"],
-      "sara-solids": ["Sara a complété la leçon sur les solides.", "Mathématiques · 3e secondaire"],
-      "pod-confirmed": ["Séance de pod confirmée pour jeudi.", "Groupe 3e année · 16 h 30"],
-      "adam-portfolio": ["Nouveau document ajouté au portfolio d’Adam.", "Projet · Le système solaire"],
-    } as Record<string, [string, string]>,
+      "child1-opinion": (name: string) => [`${name} a soumis son texte d’opinion.`, "Français"] as [string, string],
+      "child2-solids": (name: string) => [`${name} a complété la leçon sur les solides.`, "Mathématiques"] as [string, string],
+      "pod-confirmed": () => ["Séance de pod confirmée pour jeudi.", "Groupe familial · 16 h 30"] as [string, string],
+      "child1-portfolio": (name: string) => [`Nouveau document ajouté au portfolio ${frDe(name)}.`, "Projet · Le système solaire"] as [string, string],
+    } as Record<string, (name: string) => [string, string]>,
     actionsTitle: "Prochaines actions",
     tasks: {
-      "fractions-review": { title: "Valider le cours de fractions", meta: "Généré pour Adam · 25 min", cta: "Ouvrir", tag: "À valider", done: "Validé",
-        detail: "Un cours de révision sur les fractions a été généré pour Adam. Vérifiez le contenu avant de l’ajouter à son parcours.", confirm: "Marquer comme validé" },
-      "portfolio-evidence": { title: "Ajouter une preuve au portfolio", meta: "Sara · Sciences et technologie", cta: "Ajouter", tag: "Cette semaine", done: "Ajoutée",
-        detail: "Ajoutez une preuve (photo, document ou lien) au portfolio de Sara pour son projet de sciences.", confirm: "Marquer comme ajoutée" },
-      "pod-booking": { title: "Choisir une classe collaborative", meta: "Jeudi · 16 h 30 · 6 places", cta: "Réserver", tag: "Réserver", done: "Confirmé",
-        detail: "Confirmez la place de votre famille pour la classe collaborative de jeudi 16 h 30 (Sciences, 6 places disponibles).", confirm: "Confirmer la réservation" },
-    } as Record<string, { title: string; meta: string; cta: string; tag: string; done: string; detail: string; confirm: string }>,
+      "fractions-review": { title: "Valider le cours de fractions", meta: (name: string) => `Généré pour ${name} · 25 min`, cta: "Ouvrir", tag: "À valider", done: "Validé",
+        detail: (name: string) => `Un cours de révision sur les fractions a été généré pour ${name}. Vérifiez le contenu avant de l’ajouter à son parcours.`, confirm: "Marquer comme validé" },
+      "portfolio-evidence": { title: "Ajouter une preuve au portfolio", meta: (name: string) => `${name} · Sciences et technologie`, cta: "Ajouter", tag: "Cette semaine", done: "Ajoutée",
+        detail: (name: string) => `Ajoutez une preuve (photo, document ou lien) au portfolio ${frDe(name)} pour son projet de sciences.`, confirm: "Marquer comme ajoutée" },
+      "pod-booking": { title: "Choisir une classe collaborative", meta: () => "Jeudi · 16 h 30 · 6 places", cta: "Réserver", tag: "Réserver", done: "Confirmé",
+        detail: () => "Confirmez la place de votre famille pour la classe collaborative de jeudi 16 h 30 (Sciences, 6 places disponibles).", confirm: "Confirmer la réservation" },
+    } as Record<string, { title: string; meta: (name: string) => string; cta: string; tag: string; done: string; detail: (name: string) => string; confirm: string }>,
     alertTitle: "Échéance à vérifier", alertCta: "Voir les détails",
-    alertText: "La leçon de fractions d’Adam est à valider avant le 12 septembre.",
+    alertText: (name: string) => `La leçon de fractions ${frDe(name)} est à valider avant le 12 septembre.`,
     upcomingTitle: "À venir", weekPlanCta: "Voir le plan de la semaine →",
     upcomingText: {
-      "pod-thursday": ["Séance de pod · 3e année", "Jeudi · 16 h 00"],
-      "fractions-due": ["Échéance : leçon de fractions", "12 sept. · Adam"],
-    } as Record<string, [string, string]>,
+      "pod-thursday": () => ["Séance de pod en famille", "Jeudi · 16 h 00"] as [string, string],
+      "fractions-due": (name: string) => ["Échéance : leçon de fractions", `12 sept. · ${name}`] as [string, string],
+    } as Record<string, (name: string) => [string, string]>,
     close: "Fermer",
   },
   en: {
@@ -110,41 +149,40 @@ const copy = {
     sidebarLinks: { home: "Home", weekPlan: "Week plan", courses: "Courses", assistant: "AI assistant", community: "Community", portfolio: "Portfolio", quebecPath: "Quebec pathway", budget: "Budget" },
     sidebarBottom: "Your space stays private. AI-generated content needs your review.",
     eyebrow: "Parent space · week of September 7",
-    hello: "Hello, Amine",
+    helloPrefix: "Hello,",
     heroLabel: "Your next step",
     heroTitle: "Prepare the learning project.",
     heroText: "A few things are left to check before generating your Quebec pathway draft.",
     heroCta: "Continue",
     metricProgress: "Family progress", metricTasks: "Tasks to review", metricNext: "Next deadline",
-    metricProgressFoot: "Average of both children", metricTasksFoot: "item(s) or action(s) pending", metricNextFoot: "Fractions lesson to review",
+    metricProgressFoot: "Average of the children", metricTasksFoot: "item(s) or action(s) pending", metricNextFoot: "Fractions lesson to review",
     filterLabel: "Show", filterAll: "Whole family",
-    childNames: { adam: "Adam", sara: "Sara" } as Record<ChildId, string>,
-    childMeta: { adam: "10 years old · Grade 5", sara: "14 years old · Grade 9" } as Record<ChildId, string>,
+    ageBandLabels: { "5-8": "5–8 years old", "9-12": "9–12 years old", "13-15": "13–15 years old", "16-17": "16–17 years old" } as Record<string, string>,
     subjectNames: { french: "French", math: "Math", social: "Social studies", science: "Science" } as Record<string, string>,
     progressTitle: "This week's progress", complete: "Complete",
     activityTitle: "Recent activity",
     activityText: {
-      "adam-opinion": ["Adam submitted his opinion text.", "French · Grade 5"],
-      "sara-solids": ["Sara completed the lesson on solids.", "Math · Grade 9"],
-      "pod-confirmed": ["Pod session confirmed for Thursday.", "Grade 9 group · 4:30 PM"],
-      "adam-portfolio": ["New document added to Adam's portfolio.", "Project · The solar system"],
-    } as Record<string, [string, string]>,
+      "child1-opinion": (name: string) => [`${name} submitted an opinion text.`, "French"] as [string, string],
+      "child2-solids": (name: string) => [`${name} completed the lesson on solids.`, "Math"] as [string, string],
+      "pod-confirmed": () => ["Pod session confirmed for Thursday.", "Family group · 4:30 PM"] as [string, string],
+      "child1-portfolio": (name: string) => [`New document added to ${name}'s portfolio.`, "Project · The solar system"] as [string, string],
+    } as Record<string, (name: string) => [string, string]>,
     actionsTitle: "Next actions",
     tasks: {
-      "fractions-review": { title: "Review the fractions lesson", meta: "Generated for Adam · 25 min", cta: "Open", tag: "To review", done: "Reviewed",
-        detail: "A review lesson on fractions was generated for Adam. Check the content before adding it to his path.", confirm: "Mark as reviewed" },
-      "portfolio-evidence": { title: "Add a portfolio proof", meta: "Sara · Science and technology", cta: "Add", tag: "This week", done: "Added",
-        detail: "Add a proof (photo, document or link) to Sara's portfolio for her science project.", confirm: "Mark as added" },
-      "pod-booking": { title: "Choose a collaborative class", meta: "Thursday · 4:30 PM · 6 spots", cta: "Book", tag: "Book", done: "Confirmed",
-        detail: "Confirm your family's spot for Thursday's collaborative class (Science, 6 spots available).", confirm: "Confirm the booking" },
-    } as Record<string, { title: string; meta: string; cta: string; tag: string; done: string; detail: string; confirm: string }>,
+      "fractions-review": { title: "Review the fractions lesson", meta: (name: string) => `Generated for ${name} · 25 min`, cta: "Open", tag: "To review", done: "Reviewed",
+        detail: (name: string) => `A review lesson on fractions was generated for ${name}. Check the content before adding it to their path.`, confirm: "Mark as reviewed" },
+      "portfolio-evidence": { title: "Add a portfolio proof", meta: (name: string) => `${name} · Science and technology`, cta: "Add", tag: "This week", done: "Added",
+        detail: (name: string) => `Add a proof (photo, document or link) to ${name}'s portfolio for their science project.`, confirm: "Mark as added" },
+      "pod-booking": { title: "Choose a collaborative class", meta: () => "Thursday · 4:30 PM · 6 spots", cta: "Book", tag: "Book", done: "Confirmed",
+        detail: () => "Confirm your family's spot for Thursday's collaborative class (Science, 6 spots available).", confirm: "Confirm the booking" },
+    } as Record<string, { title: string; meta: (name: string) => string; cta: string; tag: string; done: string; detail: (name: string) => string; confirm: string }>,
     alertTitle: "Deadline to review", alertCta: "See details",
-    alertText: "Adam's fractions lesson needs review before September 12.",
+    alertText: (name: string) => `${name}'s fractions lesson needs review before September 12.`,
     upcomingTitle: "Coming up", weekPlanCta: "View the week plan →",
     upcomingText: {
-      "pod-thursday": ["Pod session · Grade 9", "Thursday · 4:00 PM"],
-      "fractions-due": ["Due: fractions lesson", "Sep 12 · Adam"],
-    } as Record<string, [string, string]>,
+      "pod-thursday": () => ["Family pod session", "Thursday · 4:00 PM"] as [string, string],
+      "fractions-due": (name: string) => ["Due: fractions lesson", `Sep 12 · ${name}`] as [string, string],
+    } as Record<string, (name: string) => [string, string]>,
     close: "Close",
   },
 } as const;
@@ -167,13 +205,33 @@ function buildMonthGrid(today: Date) {
 export default function ParentPage() {
   const [locale, setLocale] = useState<Locale>("fr");
   const [hydrated, setHydrated] = useState(false);
-  const [filter, setFilter] = useState<ChildId | null>(null);
-  const [tasks, setTasks] = useState<ParentTask[]>(initialTasks);
+  const [family, setFamily] = useState<StoredFamily | null>(null);
+  const [filter, setFilter] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<ParentTask[]>(() => buildInitialTasks(fallbackFamily("fr")));
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(localeStorageKey);
     if (saved === "fr" || saved === "en") setLocale(saved);
+
+    const rawFamily = window.localStorage.getItem(familyStorageKey);
+    if (rawFamily) {
+      try {
+        const parsed = JSON.parse(rawFamily);
+        if (parsed?.family?.name && Array.isArray(parsed.children) && parsed.children.length > 0) {
+          const loaded: StoredFamily = {
+            name: parsed.family.name,
+            parentName: parsed.family.parentName || "",
+            children: parsed.children,
+          };
+          setFamily(loaded);
+          setTasks(buildInitialTasks(loaded));
+        }
+      } catch {
+        // ignore malformed local data and keep the demo family
+      }
+    }
+
     setHydrated(true);
   }, []);
 
@@ -182,6 +240,12 @@ export default function ParentPage() {
   }, [locale, hydrated]);
 
   const t = copy[locale];
+  const activeFamily = family ?? fallbackFamily(locale);
+  const childIds = activeFamily.children.map((child) => child.id);
+  const childNameById = Object.fromEntries(activeFamily.children.map((child) => [child.id, child.displayName]));
+  const activityItems = useMemo(() => buildActivityItems(activeFamily), [activeFamily]);
+  const upcomingItems = useMemo(() => buildUpcomingItems(activeFamily), [activeFamily]);
+
   const weekdayLabels = useMemo(() => {
     const base = new Date(2026, 8, 7); // a Monday
     return Array.from({ length: 7 }, (_, i) => {
@@ -196,9 +260,14 @@ export default function ParentPage() {
   const visibleTasks = visibleForChild(tasks, filter);
   const visibleActivity = visibleForChild(activityItems, filter);
   const visibleUpcoming = visibleForChild(upcomingItems, filter);
-  const familyProgress = Math.round(childIds.reduce((sum, id) => sum + computeProgress(subjectsByChild[id]), 0) / childIds.length);
+  const familyProgress = Math.round(
+    activeFamily.children.reduce((sum, _child, index) => sum + computeProgress(subjectsForIndex(index)), 0) / activeFamily.children.length,
+  );
   const openTask = openTaskId ? tasks.find((task) => task.id === openTaskId) : undefined;
   const openTaskCopy = openTask ? t.tasks[openTask.id] : undefined;
+  const openTaskChildName = openTask?.childId ? childNameById[openTask.childId] ?? "" : "";
+  const fractionsTask = tasks.find((task) => task.id === "fractions-review");
+  const initials = familyInitials(activeFamily.parentName, activeFamily.name);
 
   return <main className="app-shell">
     <aside className="sidebar">
@@ -214,8 +283,8 @@ export default function ParentPage() {
 
     <section className="workspace">
       <div className="workspace-top">
-        <div><div className="eyebrow">{t.eyebrow}</div><h1>{t.hello}</h1></div>
-        <div className="profile"><span className="avatar">AG</span><span>Famille Ghorbel⌄</span></div>
+        <div><div className="eyebrow">{t.eyebrow}</div><h1>{t.helloPrefix} {activeFamily.parentName}</h1></div>
+        <div className="profile"><span className="avatar">{initials}</span><span>{activeFamily.name}⌄</span></div>
       </div>
 
       <section className="dash-hero">
@@ -232,21 +301,23 @@ export default function ParentPage() {
       <div className="dash-filter" role="group" aria-label={t.filterLabel}>
         <span className="dash-filter-label">{t.filterLabel} :</span>
         <button className={`dash-filter-pill ${filter === null ? "active" : ""}`} onClick={() => setFilter(null)}>{t.filterAll}</button>
-        {childIds.map((id) => <button key={id} className={`dash-filter-pill ${filter === id ? "active" : ""}`} onClick={() => setFilter(id)}>{t.childNames[id]}</button>)}
+        {activeFamily.children.map((child) => <button key={child.id} className={`dash-filter-pill ${filter === child.id ? "active" : ""}`} onClick={() => setFilter(child.id)}>{child.displayName}</button>)}
       </div>
 
       <div className="dashboard-grid">
         <div>
           <section className="panel-card">
             <h3>{t.progressTitle}</h3>
-            {visibleChildIds.map((id) => {
-              const subjects = subjectsByChild[id];
+            {activeFamily.children
+              .map((child, index) => ({ child, subjects: subjectsForIndex(index) }))
+              .filter(({ child }) => visibleChildIds.includes(child.id))
+              .map(({ child, subjects }) => {
               const pct = computeProgress(subjects);
-              return <div className="child-progress-card" key={id}>
-                <div className="avatar child-avatar">{t.childNames[id][0]}</div>
+              return <div className="child-progress-card" key={child.id}>
+                <div className="avatar child-avatar">{child.displayName[0]?.toUpperCase()}</div>
                 <div className="child-progress-info">
-                  <div className="task-title">{t.childNames[id]}</div>
-                  <div className="task-meta">{t.childMeta[id]}</div>
+                  <div className="task-title">{child.displayName}</div>
+                  <div className="task-meta">{t.ageBandLabels[child.ageBand] ?? child.ageBand}{child.level ? ` · ${child.level}` : ""}</div>
                   <ul className="subject-checklist">{subjects.map((subject) => <li key={subject.key} className={subject.done ? "done" : ""}><span>{subject.done ? "✓" : "○"}</span>{t.subjectNames[subject.key]}</li>)}</ul>
                 </div>
                 <div className="progress-ring" style={{ "--pct": String(pct * 3.6) } as CssVars}><div className="progress-ring-hole">{pct}%<span>{t.complete}</span></div></div>
@@ -256,7 +327,10 @@ export default function ParentPage() {
 
           <section className="panel-card">
             <h3>{t.activityTitle}</h3>
-            {visibleActivity.map((item) => <div className="task-row" key={item.id}><div><div className="task-title">{t.activityText[item.id][0]}</div><div className="task-meta">{t.activityText[item.id][1]}</div></div><span className="activity-icon">{item.icon}</span></div>)}
+            {visibleActivity.map((item) => {
+              const [title, meta] = t.activityText[item.id](item.childId ? childNameById[item.childId] ?? "" : "");
+              return <div className="task-row" key={item.id}><div><div className="task-title">{title}</div><div className="task-meta">{meta}</div></div><span className="activity-icon">{item.icon}</span></div>;
+            })}
           </section>
         </div>
 
@@ -265,8 +339,9 @@ export default function ParentPage() {
             <h3>{t.actionsTitle}</h3>
             {visibleTasks.map((task) => {
               const taskCopy = t.tasks[task.id];
+              const childName = task.childId ? childNameById[task.childId] ?? "" : "";
               return <div className="task-row" key={task.id}>
-                <div><div className="task-title">{taskCopy.title}</div><div className="task-meta">{taskCopy.meta}</div></div>
+                <div><div className="task-title">{taskCopy.title}</div><div className="task-meta">{taskCopy.meta(childName)}</div></div>
                 {task.status === "done"
                   ? <span className="tag tag-done">✓ {taskCopy.done}</span>
                   : <button className="real-button real-button-outline task-open" onClick={() => setOpenTaskId(task.id)}>{taskCopy.cta}</button>}
@@ -274,9 +349,9 @@ export default function ParentPage() {
             })}
           </section>
 
-          {tasks.some((task) => task.id === "fractions-review" && task.status === "pending") && <section className="panel-card alert-card">
+          {fractionsTask?.status === "pending" && <section className="panel-card alert-card">
             <div className="alert-icon">!</div>
-            <div><h3>{t.alertTitle}</h3><p>{t.alertText}</p></div>
+            <div><h3>{t.alertTitle}</h3><p>{t.alertText(childNameById[fractionsTask.childId ?? ""] ?? "")}</p></div>
             <button className="real-button real-button-outline" onClick={() => setOpenTaskId("fractions-review")}>{t.alertCta}</button>
           </section>}
 
@@ -289,7 +364,10 @@ export default function ParentPage() {
                 {month.cells.map((cell, index) => <span key={index} className={`mini-calendar-day ${cell.isToday ? "today" : ""} ${cell.day ? "" : "empty"}`}>{cell.day ?? ""}</span>)}
               </div>
             </div>
-            {visibleUpcoming.map((item) => <div className="task-row" key={item.id}><div><div className="task-title">{t.upcomingText[item.id][0]}</div><div className="task-meta">{t.upcomingText[item.id][1]}</div></div></div>)}
+            {visibleUpcoming.map((item) => {
+              const [title, meta] = t.upcomingText[item.id](item.childId ? childNameById[item.childId] ?? "" : "");
+              return <div className="task-row" key={item.id}><div><div className="task-title">{title}</div><div className="task-meta">{meta}</div></div></div>;
+            })}
             <a className="real-text-link" href="#">{t.weekPlanCta}</a>
           </section>
         </div>
@@ -299,7 +377,7 @@ export default function ParentPage() {
     {openTask && openTaskCopy && <div className="task-modal-backdrop" role="dialog" aria-modal="true" onClick={() => setOpenTaskId(null)}>
       <div className="task-modal" onClick={(e) => e.stopPropagation()}>
         <h3>{openTaskCopy.title}</h3>
-        <p>{openTaskCopy.detail}</p>
+        <p>{openTaskCopy.detail(openTaskChildName)}</p>
         <div className="task-modal-actions">
           <button className="real-button real-button-outline" onClick={() => setOpenTaskId(null)}>{t.close}</button>
           <button className="real-button real-button-dark" onClick={() => { setTasks((current) => markTaskDone(current, openTask.id)); setOpenTaskId(null); }}>{openTaskCopy.confirm}</button>
