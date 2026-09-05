@@ -9,23 +9,19 @@ import {
   visibleForChild,
   type ParentTask,
 } from "@/src/domain/parent-dashboard";
-import {
-  fallbackFamily,
-  familyInitials,
-  readStoredFamily,
-  readStoredLocale,
-  writeStoredLocale,
-  type Locale,
-  type StoredFamily,
-} from "@/src/lib/family-store";
 
+type Locale = "fr" | "en";
 type CssVars = React.CSSProperties & { "--pct"?: string };
+type StoredChild = { id: string; displayName: string; ageBand: string; level: string };
+type StoredFamily = { name: string; parentName: string; children: StoredChild[] };
 
+const localeStorageKey = "madrasa-locale";
+const familyStorageKey = "madrasa-family";
 const subjectKeys = ["french", "math", "social", "science"] as const;
 
 const sidebarLinks = [
   ["⌂", "home", "/parent"],
-  ["☷", "weekPlan", "/parent/plan"],
+  ["☷", "weekPlan", "#"],
   ["▣", "courses", "#"],
   ["✦", "assistant", "#"],
   ["◌", "community", "#"],
@@ -51,6 +47,27 @@ const demoSubjectPatterns: { key: (typeof subjectKeys)[number]; done: boolean }[
 
 function subjectsForIndex(index: number) {
   return demoSubjectPatterns[index % demoSubjectPatterns.length];
+}
+
+function fallbackFamily(locale: Locale): StoredFamily {
+  return {
+    name: "Famille Ghorbel",
+    parentName: "Amine",
+    children: [
+      { id: "adam", displayName: "Adam", ageBand: "9-12", level: locale === "fr" ? "5e année" : "Grade 5" },
+      { id: "sara", displayName: "Sara", ageBand: "13-15", level: locale === "fr" ? "3e secondaire" : "Grade 9" },
+    ],
+  };
+}
+
+function familyInitials(parentName: string, familyName: string): string {
+  const familyWord = familyName
+    .trim()
+    .split(/\s+/)
+    .filter((word) => !["famille", "family", "the"].includes(word.toLowerCase()))
+    .pop();
+  const initials = `${parentName.trim()[0] ?? ""}${(familyWord ?? familyName)[0] ?? ""}`.toUpperCase();
+  return initials || "AG";
 }
 
 function frDe(name: string): string {
@@ -194,20 +211,32 @@ export default function ParentPage() {
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = readStoredLocale();
-    if (saved) setLocale(saved);
+    const saved = window.localStorage.getItem(localeStorageKey);
+    if (saved === "fr" || saved === "en") setLocale(saved);
 
-    const loaded = readStoredFamily();
-    if (loaded) {
-      setFamily(loaded);
-      setTasks(buildInitialTasks(loaded));
+    const rawFamily = window.localStorage.getItem(familyStorageKey);
+    if (rawFamily) {
+      try {
+        const parsed = JSON.parse(rawFamily);
+        if (parsed?.family?.name && Array.isArray(parsed.children) && parsed.children.length > 0) {
+          const loaded: StoredFamily = {
+            name: parsed.family.name,
+            parentName: parsed.family.parentName || "",
+            children: parsed.children,
+          };
+          setFamily(loaded);
+          setTasks(buildInitialTasks(loaded));
+        }
+      } catch {
+        // ignore malformed local data and keep the demo family
+      }
     }
 
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) writeStoredLocale(locale);
+    if (hydrated) window.localStorage.setItem(localeStorageKey, locale);
   }, [locale, hydrated]);
 
   const t = copy[locale];

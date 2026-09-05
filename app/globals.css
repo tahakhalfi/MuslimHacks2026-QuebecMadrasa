@@ -253,20 +253,6 @@ button { cursor: pointer; }
 .task-modal h3 { margin: 0 0 12px; color: var(--forest); font-family: Georgia, serif; font-size: 22px; }
 .task-modal p { margin: 0; color: var(--muted); line-height: 1.55; }
 .task-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-.plan-lead { margin: -18px 0 0; color: var(--muted); font-size: 14px; max-width: 640px; }
-.plan-create-fields { margin: 18px 0 0; }
-.week-grid { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; overflow-x: auto; }
-.week-day-column { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: #fafcfa; }
-.week-day-header { font-weight: 800; font-size: 13px; color: var(--forest); text-transform: capitalize; }
-.week-day-empty { margin: 4px 0; color: var(--muted); font-size: 12px; font-style: italic; }
-.activity-card { padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: white; }
-.activity-card-top { display: flex; align-items: flex-start; gap: 10px; }
-.activity-subject-icon { width: 32px; height: 32px; flex-shrink: 0; font-weight: 800; font-size: 13px; }
-.ai-badge { display: inline-flex; margin-left: 6px; padding: 2px 6px; border-radius: 99px; color: #6655b8; background: #eee8ff; font-size: 9px; font-weight: 800; vertical-align: middle; }
-.activity-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; }
-.activity-move { display: inline-flex; gap: 4px; }
-.activity-move button { width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 8px; color: var(--forest); background: white; font-size: 13px; line-height: 1; }
-.activity-move button:disabled { color: #c7d4cd; cursor: not-allowed; }
 .bar { height: 9px; margin: 9px 0 15px; border-radius: 99px; background: #edf2ef; overflow: hidden; }
 .bar span { display: block; height: 100%; border-radius: inherit; background: var(--forest-2); }
 .bar.amber span { background: var(--amber); }
@@ -305,7 +291,6 @@ button { cursor: pointer; }
   .progress-ring { grid-column: 1 / -1; justify-self: start; margin-top: 6px; }
   .alert-card { grid-template-columns: auto 1fr; }
   .alert-card button { grid-column: 1 / -1; }
-  .week-grid { grid-template-columns: repeat(5, 78vw); }
 }
 @media (max-width: 580px) {
   .public-nav { padding: 0 22px; }

@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { requiredConsents, type AgeBand } from "@/src/domain/family";
-import { familyStorageKey, readStoredLocale, type Locale } from "@/src/lib/family-store";
 
+type Locale = "fr" | "en";
 type ChildDraft = { displayName: string; ageBand: AgeBand; level: string };
 
+const localeStorageKey = "madrasa-locale";
+const familyStorageKey = "madrasa-family";
 const ageBands: AgeBand[] = ["5-8", "9-12", "13-15", "16-17"];
 
 const copy = {
@@ -77,8 +79,8 @@ export default function OnboardingPage() {
   const t = copy[locale];
 
   useEffect(() => {
-    const saved = readStoredLocale();
-    if (saved) setLocale(saved);
+    const saved = window.localStorage.getItem(localeStorageKey);
+    if (saved === "fr" || saved === "en") setLocale(saved);
   }, []);
 
   const [step, setStep] = useState(0);
