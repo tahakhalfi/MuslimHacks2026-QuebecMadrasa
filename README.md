@@ -2,6 +2,8 @@
 
 Premier vertical slice local de la plateforme d'apprentissage en famille.
 
+Décision produit permanente : toutes les pages et tous les services doivent être disponibles en français et en anglais. Le français est la langue par défaut au Québec, avec une bascule de langue prévue dans la navbar et les paramètres.
+
 ## Lancer localement
 
 ```bash
