@@ -2,6 +2,17 @@
 
 Le projet est séparé en deux missions autonomes. Chaque personne doit lire les documents listés avant de coder et livrer une démo locale sans clé externe.
 
+## Démarrer sans chevaucher le travail existant
+
+```bash
+git clone https://github.com/yasserzanari/MuslimHacks2026-QuebecMadrasa.git
+cd MuslimHacks2026-QuebecMadrasa
+npm install
+npm run dev
+```
+
+Choisir une seule mission. Ne pas modifier les fichiers interdits dans le brief choisi. La mission la plus petite disponible est `03-parent-dashboard-bilingualisation.md`.
+
 ## Mission A — Parcours Québec et documents
 
 Objectif : transformer les exigences de l'enseignement à la maison en checklist, échéances, formulaires et exports vérifiables.
